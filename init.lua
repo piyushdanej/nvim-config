@@ -1,10 +1,12 @@
 vim.g.mapleader = ' '
 
+
+
 vim.g.maplocalleader = ' '
+
 vim.g.have_nerd_font = true
 
 vim.opt.number = true
-
 --vim.opt.relativenumber = true
 
 vim.opt.mouse = "a"
@@ -30,6 +32,9 @@ vim.opt.splitbelow = false
 
 vim.opt.list = true
 vim.opt.listchars = { tab = '>> ', trail = '.' , nbsp = '␣'}
+
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
 
 vim.opt.inccommand = 'split'
 
@@ -258,8 +263,8 @@ require('lazy').setup({
 			'WhoIsSethDaniel/mason-tool-installer.nvim',
 			{ 'j-hui/fidget.nvim', opts = {} },
 
-			'hrsh7th/nvim-cmp',
-			'hrsh7th/cmp-nvim-lsp' 
+			--'hrsh7th/nvim-cmp',
+			'hrsh7th/cmp-nvim-lsp'
 
 		},
 
@@ -429,6 +434,128 @@ require('lazy').setup({
 			vim.cmd.colorscheme 'everforest'
 	end
 
-}
+	},
+	{
+	 'hrsh7th/nvim-cmp',
+	 event = 'InsertEnter',
+	 dependencies = {
+		'L3MON4D3/LuaSnip',
+		 version = 'v2.*',
+		 build = 'make install_jsregexp',
+		opts = {},
+		  -- Build Step is needed for regex support in snippets.
+		  -- This step is not supported in many windows environments.
+		  -- Remove the below condition to re-enable on windows.
+		  --if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then
+		   -- return
+		  --end
+		 dependencies = {
+		  -- `friendly-snippets` contains a variety of premade snippets.
+		  --    See the README about individual language/framework/plugin snippets:
+		  --    https://github.com/rafamadriz/friendly-snippets
+		   {
+		     'rafamadriz/friendly-snippets',
+		     config = function()
+		       require('luasnip.loaders.from_vscode').lazy_load()
+		     end,
+		   },
+		},
+		'saadparwaiz1/cmp_luasnip',
+		 -- Adds other completion capabilities.
+		 --  nvim-cmp does not ship with all sources by default. They are split
+		 --  into multiple repos for maintenance purposes.
+		'hrsh7th/cmp-nvim-lsp',
+		'hrsh7th/cmp-path',
+		'hrsh7th/cmp-nvim-lsp-signature-help',
+	},
+	 config = function()
+	  local cmp = require 'cmp'
+	  local luasnip = require 'luasnip'
+	  luasnip.config.setup {}
 
-})
+	  cmp.setup {
+	    snippet = {
+		expand = function(args)
+		    luasnip.lsp_expand(args.body)
+		end,
+	  },
+	  completion = { completeopt = 'menu,menuone,noinsert'},
+	  mapping = cmp.mapping.preset.insert {
+		['<C-n>'] = cmp.mapping.select_next_item(),
+		['<C-p>'] = cmp.mapping.select_prev_item(),
+		['<C-b>'] = cmp.mapping.scroll_docs(-4),
+		['<C-f>'] = cmp.mapping.scroll_docs(4),
+		--
+		 -- Accept ([y]es) the completion.
+		 --  This will auto-import if your LSP supports it.
+		 --  This will expand snippets if the LSP sent a snippet.
+		['<CR>'] = cmp.mapping.confirm { select = true },
+		['<C-Space>'] = cmp.mapping.complete {},
+
+		['<C-l>'] = cmp.mapping(function()
+		  if luasnip.expand_or_locally_jumpable() then
+		    luasnip.expand_or_jump()
+		  end
+		end, { 'i', 's' }),
+		['<C-h>'] = cmp.mapping(function()
+		  if luasnip.locally_jumpable(-1) then
+		    luasnip.jump(-1)
+		  end
+		end, { 'i', 's' }),
+		},
+		sources = {
+		 {
+            name = 'lazydev',
+            -- set group index to 0 to skip loading LuaLS completions as lazydev recommends it
+            group_index = 0,
+          },
+          { name = 'nvim_lsp' },
+          { name = 'luasnip' },
+          { name = 'path' },
+          { name = 'nvim_lsp_signature_help' },
+		  { name = 'hrsh7th/cmp-cmdline' },
+		  { name = 'Jezda1337/nvim-html-css' },
+		  { name = 'cmp-scss'},
+		  { name = 'roginfarrer/cmp-css-variables'},
+        },
+	}
+	 end
+	},
+	{
+		'echasnovski/mini.nvim',
+		config = function ()
+			require('mini.ai').setup { n_lines = 500 }
+			require('mini.surround').setup()
+			local statusline = require 'mini.statusline'
+			statusline.setup {
+				use_icons = vim.g.have_nerd_font,
+				content = {
+					active = function()
+						local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
+						local git           = MiniStatusline.section_git({ trunc_width = 40 })
+						local diff          = MiniStatusline.section_diff({ trunc_width = 75 })
+						local diagnostics   = MiniStatusline.section_diagnostics({ trunc_width = 75 })
+						local lsp           = MiniStatusline.section_lsp({ trunc_width = 75 })
+						local filename      = MiniStatusline.section_filename({ trunc_width = 140 })
+						local fileinfo      = MiniStatusline.section_fileinfo({ trunc_width = 120 })
+						local location      = MiniStatusline.section_location({ trunc_width = 75 })
+						local search        = MiniStatusline.section_searchcount({ trunc_width = 75 })
+
+						return MiniStatusline.combine_groups({
+						  { hl = mode_hl,                  strings = { mode } },
+						  { hl = 'MiniStatuslineDevinfo',  strings = { git, diff, diagnostics, lsp } },
+						  '%<', -- Mark general truncate point
+						  { hl = 'MiniStatuslineFilename', strings = { filename } },
+						  '%=', -- End left alignment
+						  { hl = 'MiniStatuslineFileinfo', strings = { fileinfo } },
+						})
+					end
+
+				}	
+			}
+		end
+		}
+	})
+
+
+
