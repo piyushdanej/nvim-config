@@ -1,7 +1,5 @@
 vim.g.mapleader = ' '
 
-
-
 vim.g.maplocalleader = ' '
 
 vim.g.have_nerd_font = true
@@ -13,7 +11,7 @@ vim.opt.mouse = "a"
 
 --vim.opt.showmode = false
 
-vim.schedule(function() 
+vim.schedule(function()
 	vim.opt.clipboard = "unnamedplus"
 end
 )
@@ -551,11 +549,23 @@ require('lazy').setup({
 						})
 					end
 
-				}	
+				}
 			}
 		end
-		}
-	})
-
-
+	},
+	{
+	 'nvim-treesitter/nvim-treesitter',
+	 build = ':TSUpdate',
+	 main='nvim-treesitter.configs',
+	 opts= {
+		ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc'},
+		auto_install = true,
+		highlight = {
+			enable = true,
+			additional_vim_regex_highlighting ={ 'html', 'bash', 'lua', 'javascript', 'typescript', 'css', 'scss', 'go', 'vimdoc'},
+		},
+	 indent = { enable = true },
+	 }
+	},
+})
 
